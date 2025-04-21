@@ -33,6 +33,15 @@ defmodule CashFlow.Accounts.User do
     |> validate_name()
   end
 
+  @doc """
+  A user changeset for changing their name.
+  """
+  def name_changeset(user, attrs, _opts \\ []) do
+    user
+    |> cast(attrs, [:name])
+    |> validate_name()
+  end
+
   defp validate_email(changeset, opts) do
     changeset =
       changeset

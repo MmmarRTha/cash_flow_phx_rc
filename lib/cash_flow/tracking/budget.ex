@@ -10,13 +10,21 @@ defmodule CashFlow.Tracking.Budget do
     field :start_date, :date
     field :end_date, :date
 
+    belongs_to :creator, CashFlow.Accounts.User
+
     timestamps(type: :utc_datetime)
   end
 
   @doc false
   def changeset(budget, attrs) do
     budget
-    |> cast(attrs, [:name, :description, :start_date, :end_date])
-    |> validate_required([:name, :description, :start_date, :end_date])
+    |> cast(attrs, [:name, :description, :start_date, :end_date, :creator_id])
+    |> validate_required([:name, :description, :start_date, :end_date, :creator_id])
+    |> validate_length(:name, max: 50)
+    |> validate_length(:description, max: 150)
+    |> check_constraint(:end_date,
+      name: :budget_end_after_start,
+      message: "must end after the start date"
+    )
   end
 end

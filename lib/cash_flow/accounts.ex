@@ -269,6 +269,26 @@ defmodule CashFlow.Accounts do
     UserNotifier.deliver_update_email_instructions(user, update_email_url_fun.(encoded_token))
   end
 
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing a user's name.
+
+  ## Examples
+  iex > change_user_name(user)
+  %Ecto.Changeset{data: %User{}}
+  """
+  def change_user_name(user, attrs \\ %{}, opts \\ []) do
+    User.name_changeset(user, attrs, opts)
+  end
+
+  @doc """
+  Changes a user's name.
+  """
+  def update_user_name(user, attrs \\ %{}) do
+    user
+    |> User.name_changeset(attrs)
+    |> Repo.update()
+  end
+
   @doc ~S"""
   Delivers the magic link login instructions to the given user.
   """

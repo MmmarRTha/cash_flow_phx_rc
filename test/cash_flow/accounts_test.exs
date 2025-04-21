@@ -109,7 +109,7 @@ defmodule CashFlow.AccountsTest do
   describe "change_user_email/3" do
     test "returns a user changeset" do
       assert %Ecto.Changeset{} = changeset = Accounts.change_user_email(%User{})
-      assert changeset.required == [:email]
+      assert changeset.required == [:name, :email]
     end
   end
 
@@ -170,6 +170,41 @@ defmodule CashFlow.AccountsTest do
       assert Accounts.update_user_email(user, token) == :error
       assert Repo.get!(User, user.id).email == user.email
       assert Repo.get_by(UserToken, user_id: user.id)
+    end
+  end
+
+  describe "change_user_name/2" do
+    test "returns a user changeset" do
+      assert %Ecto.Changeset{} = changeset = Accounts.change_user_name(%User{})
+      assert changeset.required == [:name]
+    end
+  end
+
+  describe "update_user_name/2" do
+    setup do
+      %{user: user_fixture()}
+    end
+
+    test "validates name", %{user: user} do
+      {:error, changeset} =
+        Accounts.update_user_name(user, %{
+          name: "a"
+        })
+
+      assert %{name: ["should be at least 2 character(s)"]} = errors_on(changeset)
+    end
+
+    test "updates the name", %{user: user} do
+      new_name = user.name <> " Updated!"
+
+      {:ok, user} =
+        Accounts.update_user_name(user, %{
+          name: new_name
+        })
+
+      assert user.name == new_name
+
+      assert Accounts.get_user_by_email(user.email).name == new_name
     end
   end
 

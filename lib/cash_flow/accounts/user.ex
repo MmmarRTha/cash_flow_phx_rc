@@ -5,6 +5,7 @@ defmodule CashFlow.Accounts.User do
   @foreign_key_type :binary_id
   schema "users" do
     field :email, :string
+    field :name, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
@@ -27,8 +28,18 @@ defmodule CashFlow.Accounts.User do
   """
   def email_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email])
+    |> cast(attrs, [:email, :name])
     |> validate_email(opts)
+    |> validate_name()
+  end
+
+  @doc """
+  A user changeset for changing their name.
+  """
+  def name_changeset(user, attrs, _opts \\ []) do
+    user
+    |> cast(attrs, [:name])
+    |> validate_name()
   end
 
   defp validate_email(changeset, opts) do
@@ -89,6 +100,12 @@ defmodule CashFlow.Accounts.User do
     # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
     # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
     |> maybe_hash_password(opts)
+  end
+
+  defp validate_name(changeset) do
+    changeset
+    |> validate_required([:name])
+    |> validate_length(:name, min: 2, max: 50)
   end
 
   defp maybe_hash_password(changeset, opts) do

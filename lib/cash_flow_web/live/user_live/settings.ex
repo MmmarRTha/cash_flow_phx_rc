@@ -24,6 +24,11 @@ defmodule CashFlowWeb.UserLive.Settings do
         <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
       </.form>
 
+      <.form for={@name_form} id="name_form" phx-submit="update_name" phx-change="validate_name">
+        <.input field={@name_form[:name]} type="text" label="Name" required />
+        <.button variant="primary" phx-disable-with="Changing...">Change Name</.button>
+      </.form>
+
       <div class="divider" />
 
       <.form
@@ -80,12 +85,14 @@ defmodule CashFlowWeb.UserLive.Settings do
     user = socket.assigns.current_scope.user
     email_changeset = Accounts.change_user_email(user, %{}, validate_email: false)
     password_changeset = Accounts.change_user_password(user, %{}, hash_password: false)
+    name_changeset = Accounts.change_user_name(user, %{}, validate_name: false)
 
     socket =
       socket
       |> assign(:current_email, user.email)
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
+      |> assign(:name_form, to_form(name_changeset))
       |> assign(:trigger_submit, false)
 
     {:ok, socket}
@@ -134,6 +141,39 @@ defmodule CashFlowWeb.UserLive.Settings do
       |> to_form()
 
     {:noreply, assign(socket, password_form: password_form)}
+  end
+
+  def handle_event("validate_name", params, socket) do
+    %{"user" => user_params} = params
+
+    name_form =
+      socket.assigns.current_scope.user
+      |> Accounts.change_user_name(user_params, validate_name: false)
+      |> Map.put(:action, :validate)
+      |> to_form()
+
+    {:noreply, assign(socket, name_form: name_form)}
+  end
+
+  def handle_event("update_name", params, socket) do
+    %{"user" => user_params} = params
+    user = socket.assigns.current_scope.user
+    true = Accounts.sudo_mode?(user)
+
+    case Accounts.update_user_name(user, user_params) do
+      {:ok, user} ->
+        name_form = user |> Accounts.change_user_name(user_params) |> to_form()
+
+        socket =
+          socket
+          |> put_flash(:info, "Name updated")
+          |> assign(name_form: name_form)
+
+        {:noreply, socket}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, name_form: to_form(changeset))}
+    end
   end
 
   def handle_event("update_password", params, socket) do
